@@ -1,4 +1,3 @@
-# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/psf/black
     rev: 24.4.2
@@ -9,9 +8,10 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        args: [--ignore-missing-imports]
+        args: [--ignore-missing-imports, --explicit-package-bases]
 
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.13.2
+  - repo: https://github.com/pycqa/isort
+    rev: 5.11.5
     hooks:
       - id: isort
+        name: isort (python)
