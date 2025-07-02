@@ -33,21 +33,15 @@ class YambdaDataset:
         ],
     ) -> Dataset:
         assert event_type in YambdaDataset.INTERACTIONS
-        logger.info(
-            f"🔄 Загружаем event: {event_type} ({self.dataset_type}/{self.dataset_size})"
-        )
         return self._download(f"{self.dataset_type}/{self.dataset_size}", event_type)
 
     def audio_embeddings(self) -> Dataset:
-        logger.info("🔄 Загружаем audio_embeddings...")
         return self._download("", "embeddings")
 
     def album_item_mapping(self) -> Dataset:
-        logger.info("🔄 Загружаем album_item_mapping...")
         return self._download("", "album_item_mapping")
 
     def artist_item_mapping(self) -> Dataset:
-        logger.info("🔄 Загружаем artist_item_mapping...")
         return self._download("", "artist_item_mapping")
 
     @staticmethod
@@ -75,11 +69,6 @@ def parse_args():
         help="Размер датасета (по умолчанию: 50m)",
     )
     parser.add_argument(
-        "--base",
-        action="store_true",
-        help="Скачать interaction-таблицы (likes, listens...) и mappings (album_item_mapping...)",
-    )
-    parser.add_argument(
         "--embeddings",
         action="store_true",
         help="Скачать дополнительные таблицы c эмбедингами",
@@ -105,26 +94,19 @@ def main():
     if args.embeddings:
         extra_datasets["audio_embeddings"] = dataset.audio_embeddings
 
-    if args.base:
-        for event in YambdaDataset.INTERACTIONS:
-            logger.info(f"⬇️ Скачиваем interaction: {event}")
-            try:
-                ds = dataset.interaction(event)
-                output_path = output_dir / f"{event}.parquet"
-                logger.info(f"💾 Сохраняем в: {output_path}")
-                ds.to_parquet(output_path)
-            except Exception as e:
-                logger.error(f"❌ Ошибка при загрузке {event}: {e}")
+    for event in YambdaDataset.INTERACTIONS:
+        logger.info(f"⬇️ Скачиваем interaction: {event}")
+        ds = dataset.interaction(event)
+        output_path = output_dir / f"{event}.parquet"
+        logger.info(f"💾 Сохраняем в: {output_path}")
+        ds.to_parquet(output_path)
 
-        for name, loader_fn in extra_datasets.items():
-            logger.info(f"⬇️ Скачиваем: {name}")
-            try:
-                ds = loader_fn()
-                output_path = output_dir / f"{name}.parquet"
-                logger.info(f"💾 Сохраняем в: {output_path}")
-                ds.to_parquet(output_path)
-            except Exception as e:
-                logger.error(f"❌ Ошибка при загрузке {name}: {e}")
+    for name, loader_fn in extra_datasets.items():
+        logger.info(f"⬇️ Скачиваем: {name}")
+        ds = loader_fn()
+        output_path = output_dir / f"{name}.parquet"
+        logger.info(f"💾 Сохраняем в: {output_path}")
+        ds.to_parquet(output_path)
 
     logger.info("✅ Загрузка завершена.")
 
